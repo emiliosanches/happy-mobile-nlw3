@@ -1,31 +1,75 @@
-import React from 'react';
-import { Image, View, ScrollView, Text, StyleSheet, Dimensions } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { Image, View, ScrollView, Text, StyleSheet, Dimensions, Linking } from 'react-native';
+import { useRoute } from '@react-navigation/native';
+import { RectButton, TouchableOpacity } from 'react-native-gesture-handler';
 import MapView, { Marker } from 'react-native-maps';
 import { Feather, FontAwesome } from '@expo/vector-icons';
 
 import mapMarkerImg from '../../images/map-marker.png';
-import { RectButton } from 'react-native-gesture-handler';
+import { api } from '../../services/api';
+
+interface OrphanageDetailsRouteParams {
+    id: number;
+}
+
+interface Orphanage {
+    id: number;
+    name: string;
+    latitude: number;
+    longitude: number;
+    about: string;
+    instructions: string;
+    opening_hours: string;
+    open_on_weekends: boolean;
+    images: Array<{
+        id: number;
+        url: string;
+    }>
+}
 
 export const OrphanageDetails = () => {
+    const [orphanage, setOrphanage] = useState<Orphanage>();
+
+    const route = useRoute();
+    const params = route.params as OrphanageDetailsRouteParams;
+
+    useEffect(() => {
+        api.get(`orphanages/${params.id}`).then(response => {
+            setOrphanage(response.data);
+        })
+    }, [params.id]);
+
+    function handleOpenGoogleMaps() {
+        Linking.openURL(`https://www.google.com/maps/dir/?api=1&destination=${orphanage?.latitude},${orphanage?.longitude}`);
+    }
+
+    if (!orphanage) {
+        return (
+            <View style={styles.container}>
+                <Text style={styles.description}>Carregando...</Text>
+            </View>
+        )
+    }
+
     return (
         <ScrollView style={styles.container}>
             <View style={styles.imagesContainer}>
                 <ScrollView horizontal pagingEnabled>
-                    <Image style={styles.image} source={{ uri: 'https://fmnova.com.br/images/noticias/safe_image.jpg' }} />
-                    <Image style={styles.image} source={{ uri: 'https://fmnova.com.br/images/noticias/safe_image.jpg' }} />
-                    <Image style={styles.image} source={{ uri: 'https://fmnova.com.br/images/noticias/safe_image.jpg' }} />
+                    { orphanage.images.map(img => (
+                        <Image key={img.id} style={styles.image} source={{ uri: img.url }} />
+                    ))}
                 </ScrollView>
             </View>
 
             <View style={styles.detailsContainer}>
-                <Text style={styles.title}>Orf. Esperança</Text>
-                <Text style={styles.description}>Presta assistência a crianças de 06 a 15 anos que se encontrem em situação de risco e/ou vulnerabilidade social.</Text>
+                <Text style={styles.title}>{orphanage.name}</Text>
+                <Text style={styles.description}>{orphanage.about}</Text>
             
                 <View style={styles.mapContainer}>
                     <MapView 
                         initialRegion={{
-                            latitude: -27.2092052,
-                            longitude: -49.6401092,
+                            latitude: orphanage.latitude,
+                            longitude: orphanage.longitude,
                             latitudeDelta: 0.008,
                             longitudeDelta: 0.008,
                         }} 
@@ -38,15 +82,15 @@ export const OrphanageDetails = () => {
                         <Marker 
                         icon={mapMarkerImg}
                         coordinate={{ 
-                            latitude: -27.2092052,
-                            longitude: -49.6401092
+                            latitude: orphanage.latitude,
+                            longitude: orphanage.longitude
                         }}
                         />
                     </MapView>
 
-                    <View style={styles.routesContainer}>
+                    <TouchableOpacity onPress={handleOpenGoogleMaps} style={styles.routesContainer}>
                         <Text style={styles.routesText}>Ver rotas no Google Maps</Text>
-                    </View>
+                    </TouchableOpacity>
                 </View>
             
                 <View style={styles.separator} />
@@ -57,12 +101,19 @@ export const OrphanageDetails = () => {
                 <View style={styles.scheduleContainer}>
                     <View style={[styles.scheduleItem, styles.scheduleItemBlue]}>
                         <Feather name="clock" size={40} color="#2AB5D1" />
-                        <Text style={[styles.scheduleText, styles.scheduleTextBlue]}>Segunda a Sexta 8h às 18h</Text>
+                        <Text style={[styles.scheduleText, styles.scheduleTextBlue]}>{orphanage.opening_hours}</Text>
                     </View>
-                    <View style={[styles.scheduleItem, styles.scheduleItemGreen]}>
-                        <Feather name="info" size={40} color="#39CC83" />
-                        <Text style={[styles.scheduleText, styles.scheduleTextGreen]}>Atendemos aos fins de semana</Text>
-                    </View>
+                    { orphanage.open_on_weekends ? (
+                        <View style={[styles.scheduleItem, styles.scheduleItemGreen]}>
+                            <Feather name="info" size={40} color="#39CC83" />
+                            <Text style={[styles.scheduleText, styles.scheduleTextGreen]}>Atendemos aos fins de semana</Text>
+                        </View>
+                    ) : (
+                        <View style={[styles.scheduleItem, styles.scheduleItemRed]}>
+                            <Feather name="info" size={40} color="#FF669D" />
+                            <Text style={[styles.scheduleText, styles.scheduleTextRed]}>Não atendemos aos fins de semana</Text>
+                        </View>
+                    )}
                 </View>
 
                 <RectButton style={styles.contactButton} onPress={() => {}}>
@@ -163,6 +214,13 @@ const styles = StyleSheet.create({
         borderRadius: 20,
     },
 
+    scheduleItemRed: {
+        backgroundColor: '#FEF6F9',
+        borderWidth: 1,
+        borderColor: '#FFBCD4',
+        borderRadius: 20,
+    },
+
     scheduleText: {
         fontFamily: 'Nunito_600SemiBold',
         fontSize: 16,
@@ -176,6 +234,10 @@ const styles = StyleSheet.create({
 
     scheduleTextGreen: {
         color: '#37C77F'
+    },
+
+    scheduleTextRed: {
+        color: '#FF669D'
     },
 
     contactButton: {
