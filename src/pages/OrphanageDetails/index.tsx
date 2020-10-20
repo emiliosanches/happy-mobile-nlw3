@@ -4,6 +4,7 @@ import { useRoute } from '@react-navigation/native';
 import { RectButton, TouchableOpacity } from 'react-native-gesture-handler';
 import MapView, { Marker } from 'react-native-maps';
 import { Feather, FontAwesome } from '@expo/vector-icons';
+import ShimmerPlaceholder from 'react-native-shimmer-placeholder';
 
 import mapMarkerImg from '../../images/map-marker.png';
 import { api } from '../../services/api';
@@ -30,12 +31,15 @@ interface Orphanage {
 export const OrphanageDetails = () => {
     const [orphanage, setOrphanage] = useState<Orphanage>();
 
+    const [loaded, setLoaded] = useState(false);
+
     const route = useRoute();
     const params = route.params as OrphanageDetailsRouteParams;
 
     useEffect(() => {
         api.get(`orphanages/${params.id}`).then(response => {
             setOrphanage(response.data);
+            setLoaded(true);
         })
     }, [params.id]);
 
@@ -43,77 +47,146 @@ export const OrphanageDetails = () => {
         Linking.openURL(`https://www.google.com/maps/dir/?api=1&destination=${orphanage?.latitude},${orphanage?.longitude}`);
     }
 
-    if (!orphanage) {
-        return (
-            <View style={styles.container}>
-                <Text style={styles.description}>Carregando...</Text>
-            </View>
-        )
-    }
-
     return (
         <ScrollView style={styles.container}>
-            <View style={styles.imagesContainer}>
+            <ShimmerPlaceholder
+                shimmerWidthPercent={1.2}
+                visible={loaded}
+                style={styles.imagesShimmer}
+                contentStyle={styles.imagesContainer}
+            >
                 <ScrollView horizontal pagingEnabled>
-                    { orphanage.images.map(img => (
+                    { orphanage?.images.map(img => (
                         <Image key={img.id} style={styles.image} source={{ uri: img.url }} />
                     ))}
                 </ScrollView>
-            </View>
+            </ShimmerPlaceholder>
 
             <View style={styles.detailsContainer}>
-                <Text style={styles.title}>{orphanage.name}</Text>
-                <Text style={styles.description}>{orphanage.about}</Text>
-            
-                <View style={styles.mapContainer}>
-                    <MapView 
-                        initialRegion={{
-                            latitude: orphanage.latitude,
-                            longitude: orphanage.longitude,
-                            latitudeDelta: 0.008,
-                            longitudeDelta: 0.008,
-                        }} 
-                        zoomEnabled={false}
-                        pitchEnabled={false}
-                        scrollEnabled={false}
-                        rotateEnabled={false}
-                        style={styles.mapStyle}
-                    >
-                        <Marker 
-                        icon={mapMarkerImg}
-                        coordinate={{ 
-                            latitude: orphanage.latitude,
-                            longitude: orphanage.longitude
-                        }}
-                        />
-                    </MapView>
+                <ShimmerPlaceholder
+                    shimmerWidthPercent={1.2}
+                    shimmerColors={['#ebebeb', '#F0F0F0', '#ebebeb']}
+                    visible={loaded}
+                    style={!loaded ? styles.titleShimmer : {}}
+                >
+                    <Text style={styles.title}>{orphanage?.name}</Text>
+                </ShimmerPlaceholder>
 
-                    <TouchableOpacity onPress={handleOpenGoogleMaps} style={styles.routesContainer}>
-                        <Text style={styles.routesText}>Ver rotas no Google Maps</Text>
-                    </TouchableOpacity>
-                </View>
+                <ShimmerPlaceholder
+                    shimmerWidthPercent={1.2}
+                    shimmerColors={['#ebebeb', '#F0F0F0', '#ebebeb']} 
+                    visible={loaded} 
+                    style={!loaded ? styles.descriptionShimmer : {}} 
+                />
+                <ShimmerPlaceholder
+                    shimmerWidthPercent={1.2}
+                    shimmerColors={['#ebebeb', '#F0F0F0', '#ebebeb']} 
+                    visible={loaded} 
+                    style={!loaded ? styles.descriptionShimmer : {}} 
+                />
+                <ShimmerPlaceholder
+                    shimmerWidthPercent={1.2}
+                    shimmerColors={['#ebebeb', '#F0F0F0', '#ebebeb']} 
+                    visible={loaded} 
+                    style={!loaded ? styles.descriptionShimmer : {}} 
+                />
+                <ShimmerPlaceholder
+                    shimmerWidthPercent={1.2}
+                    shimmerColors={['#ebebeb', '#F0F0F0', '#ebebeb']} 
+                    visible={loaded} 
+                    style={!loaded ? styles.descriptionShimmer : {}} 
+                >
+                    <Text style={styles.description}>{orphanage?.about}</Text>
+                </ShimmerPlaceholder>
+
+        
+                <ShimmerPlaceholder
+                    shimmerWidthPercent={1.2}
+                    shimmerColors={['#ebebeb', '#F0F0F0', '#ebebeb']} 
+                    visible={loaded} 
+                    style={!loaded ? styles.mapContainerShimmer : {}}
+                >
+                    <View style={styles.mapContainer}>
+                        { orphanage && (
+                            <MapView 
+                                initialRegion={{
+                                    latitude: orphanage.latitude,
+                                    longitude: orphanage.longitude,
+                                    latitudeDelta: 0.008,
+                                    longitudeDelta: 0.008,
+                                }} 
+                                zoomEnabled={false}
+                                pitchEnabled={false}
+                                scrollEnabled={false}
+                                rotateEnabled={false}
+                                style={styles.mapStyle}
+                            >
+                                
+                                <Marker 
+                                    icon={mapMarkerImg}
+                                    coordinate={{ 
+                                        latitude: orphanage.latitude,
+                                        longitude: orphanage.longitude
+                                    }}
+                                />
+                            </MapView>
+                        )}
+
+                        <TouchableOpacity onPress={handleOpenGoogleMaps} style={styles.routesContainer}>
+                            <Text style={styles.routesText}>Ver rotas no Google Maps</Text>
+                        </TouchableOpacity>
+                    </View>
+                </ShimmerPlaceholder>
             
                 <View style={styles.separator} />
 
                 <Text style={styles.title}>Instruções para visita</Text>
-                <Text style={styles.description}>Venha como se sentir a vontade e traga muito amor e paciência para dar.</Text>
+                <ShimmerPlaceholder
+                    shimmerWidthPercent={1.2}
+                    shimmerColors={['#ebebeb', '#F0F0F0', '#ebebeb']} 
+                    visible={loaded} 
+                    style={!loaded ? styles.instructionsShimmer : {}}
+                />
+                <ShimmerPlaceholder
+                    shimmerWidthPercent={1.2}
+                    shimmerColors={['#ebebeb', '#F0F0F0', '#ebebeb']} 
+                    visible={loaded} 
+                    style={!loaded ? styles.instructionsShimmer : {}}
+                >
+                    <Text style={styles.description}>{orphanage?.instructions}</Text>
+                </ShimmerPlaceholder>
 
                 <View style={styles.scheduleContainer}>
-                    <View style={[styles.scheduleItem, styles.scheduleItemBlue]}>
-                        <Feather name="clock" size={40} color="#2AB5D1" />
-                        <Text style={[styles.scheduleText, styles.scheduleTextBlue]}>{orphanage.opening_hours}</Text>
-                    </View>
-                    { orphanage.open_on_weekends ? (
-                        <View style={[styles.scheduleItem, styles.scheduleItemGreen]}>
-                            <Feather name="info" size={40} color="#39CC83" />
-                            <Text style={[styles.scheduleText, styles.scheduleTextGreen]}>Atendemos aos fins de semana</Text>
+                    <ShimmerPlaceholder 
+                        shimmerWidthPercent={1.2}
+                        shimmerColors={['#ebebeb', '#F0F0F0', '#ebebeb']} 
+                        visible={loaded} 
+                        style={styles.scheduleItemShimmer} 
+                    >
+                        <View style={[styles.scheduleItem, styles.scheduleItemBlue]}>
+                            <Feather name="clock" size={40} color="#2AB5D1" />
+                            <Text style={[styles.scheduleText, styles.scheduleTextBlue]}>{orphanage?.opening_hours}</Text>
                         </View>
-                    ) : (
-                        <View style={[styles.scheduleItem, styles.scheduleItemRed]}>
-                            <Feather name="info" size={40} color="#FF669D" />
-                            <Text style={[styles.scheduleText, styles.scheduleTextRed]}>Não atendemos aos fins de semana</Text>
-                        </View>
-                    )}
+                    </ShimmerPlaceholder>
+
+                    <ShimmerPlaceholder 
+                        shimmerWidthPercent={1.2}
+                        shimmerColors={['#ebebeb', '#F0F0F0', '#ebebeb']} 
+                        visible={loaded} 
+                        style={styles.scheduleItemShimmer} 
+                    >
+                        { orphanage?.open_on_weekends ? (
+                            <View style={[styles.scheduleItem, styles.scheduleItemGreen]}>
+                                <Feather name="info" size={40} color="#39CC83" />
+                                <Text style={[styles.scheduleText, styles.scheduleTextGreen]}>Atendemos aos fins de semana</Text>
+                            </View>
+                        ) : orphanage ? (
+                            <View style={[styles.scheduleItem, styles.scheduleItemRed]}>
+                                <Feather name="info" size={40} color="#FF669D" />
+                                <Text style={[styles.scheduleText, styles.scheduleTextRed]}>Não atendemos aos fins de semana</Text>
+                            </View>
+                        ) : (null)}
+                    </ShimmerPlaceholder>
                 </View>
 
                 <RectButton style={styles.contactButton} onPress={() => {}}>
@@ -163,11 +236,13 @@ const styles = StyleSheet.create({
         borderWidth: 1.2,
         borderColor: '#B3DAE2',
         marginTop: 40,
+        width: '100%',
         backgroundColor: '#E6F7FB',
     },
 
     mapStyle: {
-        width: '100%',
+        flex: 1,
+        width: Dimensions.get('window').width,
         height: 150,
     },
 
@@ -196,29 +271,29 @@ const styles = StyleSheet.create({
     },
 
     scheduleItem: {
-        width: '48%',
+        flex: 1,
+        width: '100%',
         padding: 20,
+        borderRadius: 20,
     },
 
     scheduleItemBlue: {
         backgroundColor: '#E6F7FB',
         borderWidth: 1,
         borderColor: '#B3DAE2',
-        borderRadius: 20,
+        
     },
 
     scheduleItemGreen: {
         backgroundColor: '#EDFFF6',
         borderWidth: 1,
         borderColor: '#A1E9C5',
-        borderRadius: 20,
     },
 
     scheduleItemRed: {
         backgroundColor: '#FEF6F9',
         borderWidth: 1,
         borderColor: '#FFBCD4',
-        borderRadius: 20,
     },
 
     scheduleText: {
@@ -255,5 +330,44 @@ const styles = StyleSheet.create({
         color: '#FFF',
         fontSize: 16,
         marginLeft: 16,
+    },
+
+    imagesShimmer: {
+        flex: 1,
+        width: '100%',
+        height: 240 
+    },
+
+    titleShimmer: {
+        minHeight: 30,
+        width: '70%',
+        marginBottom: 16,
+        borderRadius: 15
+    },
+
+    descriptionShimmer: {
+        width: '100%',
+        marginBottom: 8,
+        minHeight: 16,
+        borderRadius: 8
+    },
+
+    mapContainerShimmer: { 
+        borderRadius: 20,
+        height: 280, 
+        width: '100%',
+        marginTop: 40
+    },
+
+    instructionsShimmer: {
+        marginTop: 16,
+        width: '100%',
+        minHeight: 16,
+        borderRadius: 8
+    },
+
+    scheduleItemShimmer: {
+        width: '48%',
+        borderRadius: 20
     }
 })
